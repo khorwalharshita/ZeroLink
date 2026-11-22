@@ -87,6 +87,7 @@ The backend:
 
 ## System Architecture
 
+```text
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                         SENDER PHONE (offline)                          │
 │  PaymentInstruction { sender, receiver, amount, pinHash, nonce, time }  │
@@ -125,6 +126,7 @@ The backend:
 │       @Transactional: debit sender, credit receiver, write ledger       │
 │       @Version on Account = optimistic locking (defense in depth)       │
 └─────────────────────────────────────────────────────────────────────────┘
+```
 
 ```text
        SENDER DEVICE (OFFLINE)
