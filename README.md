@@ -167,6 +167,49 @@ The backend:
                   |
                   v
              Account Ledger
+
+
+zerolink/
+├── pom.xml                                  Maven build, Spring Boot 3.3, Java 17
+├── mvnw, mvnw.cmd                           Maven wrapper (no install needed)
+├── README.md                                this file
+└── src/main/
+    ├── resources/
+    │   ├── application.properties           H2 in-memory DB, port 8080, TTLs
+    │   └── templates/dashboard.html         The interactive demo UI
+    └── java/com/demo/upimesh/
+        ├── UpiMeshApplication.java          Spring Boot main class
+        │
+        ├── model/                           ── Domain layer
+        │   ├── Account.java                 JPA entity. @Version = optimistic lock
+        │   ├── AccountRepository.java       Spring Data JPA
+        │   ├── Transaction.java             Settled-tx ledger. unique idx on packetHash
+        │   ├── TransactionRepository.java   Spring Data JPA
+        │   ├── MeshPacket.java              Wire format. Outer fields readable, ciphertext opaque
+        │   └── PaymentInstruction.java      Decrypted payload (sender/receiver/amount/nonce/time)
+        │
+        ├── crypto/                          ── Cryptography layer
+        │   ├── ServerKeyHolder.java         Generates RSA-2048 keypair on startup
+        │   └── HybridCryptoService.java     RSA-OAEP + AES-256-GCM encrypt/decrypt + ciphertext hash
+        │
+        ├── service/                         ── Business logic
+        │   ├── DemoService.java             Seeds accounts, simulates a sender phone
+        │   ├── VirtualDevice.java           One simulated phone in the mesh
+        │   ├── MeshSimulatorService.java    Gossip protocol across virtual devices
+        │   ├── IdempotencyService.java      ConcurrentHashMap = JVM-local Redis SETNX
+        │   ├── SettlementService.java       @Transactional debit + credit + ledger insert
+        │   └── BridgeIngestionService.java  THE pipeline: hash → claim → decrypt → freshness → settle
+        │
+        ├── controller/                      ── HTTP layer
+        │   ├── ApiController.java           All REST endpoints
+        │   └── DashboardController.java     Serves the dashboard HTML at /
+        │
+        └── config/
+            └── AppConfig.java               @EnableScheduling for cache eviction
+
+src/test/java/com/demo/upimesh/
+└── IdempotencyConcurrencyTest.java          The 3-bridges-at-once test + tamper test
+
 ```
 
 ---
